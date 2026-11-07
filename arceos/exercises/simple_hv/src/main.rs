@@ -68,11 +68,12 @@ fn prepare_vm_pgtable(ept_root: PhysAddr) {
 }
 
 fn run_guest(ctx: &mut VmCpuRegisters) -> bool {
-    unsafe {
-        _run_guest(ctx);
-    }
-
-    vmexit_handler(ctx)
+    // A host timer must not arrive while stvec and sscratch belong to the guest exit path.
+    let interrupts = CSR.sie.atomic_replace(0);
+    unsafe { _run_guest(ctx); }
+    let finished = vmexit_handler(ctx);
+    CSR.sie.write_value(interrupts);
+    finished
 }
 
 #[allow(unreachable_code)]
@@ -102,16 +103,16 @@ fn vmexit_handler(ctx: &mut VmCpuRegisters) -> bool {
             }
         },
         Trap::Exception(Exception::IllegalInstruction) => {
-            panic!("Bad instruction: {:#x} sepc: {:#x}",
-                stval::read(),
-                ctx.guest_regs.sepc
-            );
+            // The guest reads mhartid into a1 (one 32-bit CSR instruction).
+            assert_eq!(stval::read(), 0xf14025f3); // csrr a1, mhartid
+            ctx.guest_regs.gprs.set_reg(A1, 0x1234);
+            ctx.guest_regs.sepc += 4;
         },
         Trap::Exception(Exception::LoadGuestPageFault) => {
-            panic!("LoadGuestPageFault: stval{:#x} sepc: {:#x}",
-                stval::read(),
-                ctx.guest_regs.sepc
-            );
+            // Its next instruction reads the virtual device at address 64 into a0.
+            assert_eq!(stval::read(), 64);
+            ctx.guest_regs.gprs.set_reg(A0, 0x6688);
+            ctx.guest_regs.sepc += 4;
         },
         _ => {
             panic!(
