@@ -131,16 +131,49 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
     ret
 }
 
-#[allow(unused_variables)]
 fn sys_mmap(
     addr: *mut usize,
     length: usize,
     prot: i32,
     flags: i32,
     fd: i32,
-    _offset: isize,
+    offset: isize,
 ) -> isize {
-    unimplemented!("no sys_mmap!");
+    use memory_addr::{VirtAddrRange, PAGE_SIZE_4K};
+
+    syscall_body!(sys_mmap, {
+        if length == 0 || offset < 0 || offset as usize % PAGE_SIZE_4K != 0 {
+            return Err(LinuxError::EINVAL);
+        }
+        if flags != MmapFlags::MAP_PRIVATE.bits() { return Err(LinuxError::EOPNOTSUPP); }
+        let prot = MmapProt::from_bits(prot).ok_or(LinuxError::EINVAL)?;
+        let size = length.checked_next_multiple_of(PAGE_SIZE_4K).ok_or(LinuxError::ENOMEM)?;
+        let task = current();
+        let mut space = task.task_ext().aspace.lock();
+        let range = VirtAddrRange::new(space.base(), space.end());
+        let start = space.find_free_area((addr as usize).into(), size, range).ok_or(LinuxError::ENOMEM)?;
+        space.map_alloc(start, size, prot.into(), true)?;
+
+        // The new pages are zero-filled; copy only the bytes present in the file.
+        let mut buf = [0; PAGE_SIZE_4K];
+        let mut copied = 0;
+        while copied < length {
+            let limit = buf.len().min(length - copied);
+            let result = api::read_file_at(fd, offset as u64 + copied as u64, &mut buf[..limit]);
+            match result {
+                Ok(0) => break,
+                Ok(n) => {
+                    space.write(start + copied, &buf[..n])?;
+                    copied += n;
+                }
+                Err(error) => {
+                    space.unmap(start, size)?;
+                    return Err(error);
+                }
+            }
+        }
+        Ok(start.as_usize())
+    })
 }
 
 fn sys_openat(dfd: c_int, fname: *const c_char, flags: c_int, mode: api::ctypes::mode_t) -> isize {

@@ -32,6 +32,13 @@ impl File {
     }
 }
 
+/// Read at an explicit offset without moving the file descriptor's cursor.
+pub fn read_file_at(fd: c_int, offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+    let file = File::from_fd(fd)?;
+    let count = file.inner.lock().read_at(offset, buf)?;
+    Ok(count)
+}
+
 impl FileLike for File {
     fn read(&self, buf: &mut [u8]) -> LinuxResult<usize> {
         Ok(self.inner.lock().read(buf)?)
