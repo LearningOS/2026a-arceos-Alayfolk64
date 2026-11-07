@@ -6,6 +6,8 @@
 
 extern crate alloc;
 
+use spin::Mutex;
+
 mod dir;
 mod file;
 

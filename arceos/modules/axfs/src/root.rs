@@ -302,6 +302,18 @@ pub(crate) fn set_current_dir(path: &str) -> AxResult {
 }
 
 pub(crate) fn rename(old: &str, new: &str) -> AxResult {
+    #[cfg(feature = "ramfs")]
+    {
+        let src = absolute_path(old)?;
+        let dst = absolute_path(new)?;
+        let (dir, name) = src.rsplit_once('/').ok_or(AxError::InvalidInput)?;
+        let (new_dir, new_name) = dst.rsplit_once('/').ok_or(AxError::InvalidInput)?;
+        let parent = lookup(None, if dir.is_empty() { "/" } else { dir })?;
+        if parent.as_any().is::<fs::ramfs::DirNode>() {
+            if dir != new_dir { return Err(AxError::Unsupported); }
+            return parent.rename(name, new_name);
+        }
+    }
     if parent_node_of(None, new).lookup(new).is_ok() {
         warn!("dst file already exist, now remove it");
         remove_file(None, new)?;
