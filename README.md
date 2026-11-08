@@ -17,7 +17,9 @@ cd 2026a-arceos-YOUR_GITHUB_LOGIN
 
 ## 2. 进入做题环境
 
-安装并启动 Docker，在作业仓库根目录执行：
+安装并启动 Docker。用 VS Code 做题时，先安装 **Dev Containers** 扩展，打开作业仓库根目录，选择 **Dev Containers: Reopen in Container**。首次打开会下载课程镜像并自动安装 rust-analyzer 扩展。等索引完成，按住 Ctrl（macOS 用 ⌘）点击第一题的 `println!` 即可跳到定义，也可以按 F12。直接在 VS Code 的容器终端运行测试。
+
+只用终端做题时，在仓库根目录执行：
 
 ```sh
 ./scripts/docker.sh

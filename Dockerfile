@@ -28,5 +28,6 @@ RUN curl -fL --retry 3 https://github.com/arceos-org/setup-musl/releases/downloa
 RUN --mount=type=bind,target=/source cd /source/arceos && cargo fetch --locked && \
     chmod -R a+rwX /opt/cargo/registry /opt/cargo/git && chmod a+rwX /opt/cargo && \
     find /opt/cargo -maxdepth 1 -type f -exec chmod a+rw {} +
+RUN rustup component add rust-analyzer --toolchain nightly-2024-09-04
 WORKDIR /workspace
 CMD ["bash"]
