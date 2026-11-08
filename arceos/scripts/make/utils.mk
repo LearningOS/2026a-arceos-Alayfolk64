@@ -35,12 +35,8 @@ endef
 
 define setup_disk
   $(call build_origin)
-  @mkdir -p ./mnt
-  @sudo mount $(1) ./mnt
-  @sudo mkdir -p ./mnt/sbin
-  @sudo cp /tmp/origin.bin ./mnt/sbin
-  @sudo umount ./mnt
-  @rm -rf mnt
+  @mmd -i "$(1)" ::/sbin
+  @mcopy -i "$(1)" /tmp/origin.bin ::/sbin/
 endef
 
 define build_origin

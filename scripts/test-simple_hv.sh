@@ -3,7 +3,7 @@
 tmp_file=hv_output.txt
 grep_content="Shutdown vm normally!"
 
-cd arceos/ || exit
+cd "$(dirname "$0")/../arceos" || exit 1
 
 
 rm pflash.img

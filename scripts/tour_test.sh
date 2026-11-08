@@ -1,9 +1,6 @@
 #!/bin/bash
 
-cd arceos || {
-    echo "Failed to change directory to arceos"
-    exit 1
-}
+cd "$(dirname "$0")/../arceos" || exit 1
 
 search_texts() {
     local texts=("$@")

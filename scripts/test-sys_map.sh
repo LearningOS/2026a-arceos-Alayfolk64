@@ -3,7 +3,7 @@
 tmp_file=mmap_test_output.txt
 grep_content="Read back content: hello, arceos!"
 
-cd arceos/ || exit
+cd "$(dirname "$0")/../arceos" || exit 1
 
 rm pflash.img -f
 rm disk.img -f

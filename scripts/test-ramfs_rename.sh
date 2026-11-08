@@ -4,7 +4,7 @@
 tmp_file=b.txt
 grep_content="\[Ramfs-Rename\]: ok!"
 
-cd arceos/ || exit
+cd "$(dirname "$0")/../arceos" || exit 1
 
 
 rm pflash.img -f 

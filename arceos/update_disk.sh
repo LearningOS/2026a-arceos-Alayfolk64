@@ -1,27 +1,10 @@
 #!/bin/sh
+set -eu
 
-if [ $# -ne 1 ]; then
-    printf "Usage: ./update.sh [userapp path]\n"
-    exit
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./update_disk.sh <file>" >&2
+    exit 1
 fi
 
-FILE=$1
-
-if [ ! -f $FILE ]; then
-    printf "File '$FILE' doesn't exist!\n"
-    exit
-fi
-
-if [ ! -f ./disk.img ]; then
-    printf "disk.img doesn't exist! Please 'make disk_img'\n"
-    exit
-fi
-
-printf "Write file '$FILE' into disk.img\n"
-
-mkdir -p ./mnt
-sudo mount ./disk.img ./mnt
-sudo mkdir -p ./mnt/sbin
-sudo cp $FILE ./mnt/sbin
-sudo umount ./mnt
-rm -rf mnt
+# make disk_img creates /sbin in the FAT image.
+mcopy -o -i disk.img "$1" ::/sbin/

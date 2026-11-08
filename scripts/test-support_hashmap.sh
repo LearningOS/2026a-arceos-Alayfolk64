@@ -3,7 +3,7 @@
 tmp_file=hashmap_output.txt
 grep_content="Memory tests run OK!"
 
-cd arceos/ || exit
+cd "$(dirname "$0")/../arceos" || exit 1
 
 
 rm pflash.img -f

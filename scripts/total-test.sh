@@ -1,4 +1,6 @@
 #!/bin/bash
+cd "$(dirname "$0")/.." || exit 1
+
 file_name=test.output
 score=0
 
